@@ -1,18 +1,10 @@
-name: Deploy to GitHub Pages
+name: Build only (deployment handled by jekyll-gh-pages.yml)
 
 on:
-  push:
-    branches: [claude/ai-todo-list-builder-GEHr1]
-
-permissions:
-  contents: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,10 +14,3 @@ jobs:
           cache: npm
       - run: npm install
       - run: npm run build
-      - name: Commit docs/ to branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/ -f
-          git diff --cached --quiet || git commit -m "deploy: update docs/"
-          git push
