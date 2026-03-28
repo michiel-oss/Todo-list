@@ -4,22 +4,91 @@ import {
   Download02, RefreshCw01, ZapCircle, ArrowRight
 } from 'untitledui-js/react'
 
-/* ── AI prompt map by keyword ── */
+/* ── Product-specific suggestion map ── */
+const PRODUCT_MAP = [
+  // Vegetables
+  { match: /paprika|bell pepper|capsicum/,          q: 'Which colour?',        s: ['Red', 'Yellow', 'Green', 'Orange'] },
+  { match: /tomaat|tomato|tomaten/,                  q: 'Which type?',          s: ['Cherry', 'Vine', 'Roma', 'Beef'] },
+  { match: /sla|lettuce|salade/,                     q: 'Which type?',          s: ['Iceberg', 'Romaine', 'Spinach', 'Rucola'] },
+  { match: /ui|onion/,                               q: 'Which onion?',         s: ['Yellow', 'Red', 'White', 'Spring'] },
+  { match: /kool|cabbage/,                           q: 'Which type?',          s: ['White', 'Red', 'Broccoli', 'Savoy'] },
+  { match: /mushroom|champignon|paddestoel/,         q: 'Which type?',          s: ['Button', 'Portobello', 'Shiitake', 'Oyster'] },
+  { match: /courgette|zucchini/,                     q: 'Which size?',          s: ['Small', 'Medium', 'Large', 'Mixed'] },
+  { match: /appel|apple/,                            q: 'Which variety?',       s: ['Granny Smith', 'Fuji', 'Gala', 'Golden'] },
+  { match: /peer|pear/,                              q: 'Which variety?',       s: ['Conference', 'Doyenné', 'Gieser', 'Williams'] },
+  { match: /druif|grape/,                            q: 'Which type?',          s: ['Green', 'Red', 'Blue', 'Seedless'] },
+  { match: /aardbei|strawberr/,                      q: 'How much?',            s: ['250g', '500g', '1 kg', 'Punnet'] },
+  { match: /banaan|banana/,                          q: 'How ripe?',            s: ['Green', 'Yellow', 'Ripe', 'Organic'] },
+
+  // Dairy
+  { match: /melk|milk/,                              q: 'Which milk?',          s: ['Full fat', 'Semi-skimmed', 'Skimmed', 'Oat milk'] },
+  { match: /kaas|cheese/,                            q: 'Which cheese?',        s: ['Gouda', 'Edam', 'Brie', 'Mozzarella'] },
+  { match: /yoghurt|yogurt/,                         q: 'Which type?',          s: ['Plain', 'Greek', 'Skyr', 'Fruit'] },
+  { match: /boter|butter/,                           q: 'Which type?',          s: ['Salted', 'Unsalted', 'Light', 'Plant-based'] },
+  { match: /room|cream/,                             q: 'Which cream?',         s: ['Single', 'Double', 'Sour', 'Whipping'] },
+  { match: /ei|eggs?/,                               q: 'Which eggs?',          s: ['Free range', 'Organic', 'Medium', 'Large'] },
+
+  // Bread & bakery
+  { match: /brood|bread/,                            q: 'Which bread?',         s: ['White', 'Brown', 'Volkoren', 'Vita plus'] },
+  { match: /baguette/,                               q: 'How many?',            s: ['1', '2', '3', '4'] },
+  { match: /croissant/,                              q: 'Which type?',          s: ['Plain', 'Butter', 'Chocolate', 'Almond'] },
+  { match: /beschuit|rusk/,                          q: 'Which type?',          s: ['Regular', 'Wholegrain', 'Mini', 'Gluten-free'] },
+
+  // Meat & fish
+  { match: /kip|chicken/,                            q: 'Which cut?',           s: ['Breast', 'Thigh', 'Drumstick', 'Whole'] },
+  { match: /gehakt|mince|ground/,                    q: 'Which meat?',          s: ['Beef', 'Pork', 'Mixed', 'Turkey'] },
+  { match: /vlees|beef|steak/,                       q: 'Which cut?',           s: ['Sirloin', 'Ribeye', 'Rump', 'Fillet'] },
+  { match: /worst|sausage/,                          q: 'Which type?',          s: ['Pork', 'Chicken', 'Veggie', 'Chorizo'] },
+  { match: /vis|fish|zalm|salmon/,                   q: 'Which fish?',          s: ['Salmon', 'Cod', 'Tuna', 'Tilapia'] },
+  { match: /tonijn|tuna/,                            q: 'Which type?',          s: ['In water', 'In oil', 'Fresh', 'Smoked'] },
+  { match: /garnaal|shrimp|prawn/,                   q: 'Which size?',          s: ['Small', 'Medium', 'King', 'Cooked'] },
+
+  // Pasta, rice & grains
+  { match: /pasta|spaghetti|penne|fusilli/,          q: 'Which pasta?',         s: ['Spaghetti', 'Penne', 'Fusilli', 'Tagliatelle'] },
+  { match: /rijst|rice/,                             q: 'Which rice?',          s: ['Basmati', 'Jasmine', 'Brown', 'Risotto'] },
+  { match: /aardappel|potato|aardappelen/,           q: 'Which type?',          s: ['Waxy', 'Floury', 'Sweet potato', 'Baby'] },
+  { match: /noedel|noodle/,                          q: 'Which noodle?',        s: ['Egg', 'Rice', 'Udon', 'Soba'] },
+
+  // Drinks
+  { match: /sap|juice/,                              q: 'Which juice?',         s: ['Orange', 'Apple', 'Tropical', 'Tomato'] },
+  { match: /water/,                                  q: 'Which water?',         s: ['Still', 'Sparkling', 'Flavoured', 'Mineral'] },
+  { match: /koffie|coffee/,                          q: 'Which type?',          s: ['Beans', 'Ground', 'Pods', 'Instant'] },
+  { match: /thee|tea/,                               q: 'Which tea?',           s: ['Black', 'Green', 'Herbal', 'Fruit'] },
+  { match: /bier|beer/,                              q: 'Which beer?',          s: ['Lager', 'IPA', 'Wheat', 'Non-alcoholic'] },
+  { match: /wijn|wine/,                              q: 'Which wine?',          s: ['Red', 'White', 'Rosé', 'Sparkling'] },
+
+  // Canned & packaged
+  { match: /soep|soup/,                              q: 'Which soup?',          s: ['Tomato', 'Chicken', 'Mushroom', 'Minestrone'] },
+  { match: /bonen|beans/,                            q: 'Which beans?',         s: ['White', 'Black', 'Kidney', 'Chickpeas'] },
+  { match: /chips|crisps/,                           q: 'Which flavour?',       s: ['Plain', 'Salt & vinegar', 'Paprika', 'Cheese'] },
+  { match: /koek|cookie|biscuit/,                    q: 'Which type?',          s: ['Chocolate chip', 'Speculaas', 'Digestive', 'Oreo'] },
+  { match: /chocola|chocolate/,                      q: 'Which chocolate?',     s: ['Dark', 'Milk', 'White', 'Baking'] },
+  { match: /jam|jelly|confiture/,                    q: 'Which flavour?',       s: ['Strawberry', 'Raspberry', 'Apricot', 'Mixed berry'] },
+  { match: /pindakaas|peanut butter/,                q: 'Which type?',          s: ['Smooth', 'Crunchy', 'Light', 'Organic'] },
+  { match: /olie|oil/,                               q: 'Which oil?',           s: ['Olive', 'Sunflower', 'Coconut', 'Vegetable'] },
+
+  // Cleaning & household
+  { match: /wasmiddel|detergent|laundry/,            q: 'Which format?',        s: ['Liquid', 'Pods', 'Powder', 'Fabric softener'] },
+  { match: /shampoo/,                                q: 'Which type?',          s: ['Normal', 'Dry', 'Oily', 'Colour protect'] },
+  { match: /tandpasta|toothpaste/,                   q: 'Which type?',          s: ['Whitening', 'Sensitive', 'Fresh mint', 'Total care'] },
+]
+
+/* ── AI prompt resolver ── */
 function getAIPrompt(itemText) {
-  const text = itemText.toLowerCase()
-  if (text.match(/buy|shop|get|purchase/))
-    return { question: `How urgent is "${itemText}"?`, suggestions: ['Today', 'This week', 'Whenever', 'Running low'] }
-  if (text.match(/email|message|call|contact|reply/))
-    return { question: `Who's the priority for "${itemText}"?`, suggestions: ['Client', 'Boss', 'Team', 'Personal'] }
-  if (text.match(/fix|bug|error|issue|broken/))
-    return { question: `How critical is "${itemText}"?`, suggestions: ['Blocking', 'High priority', 'Low priority', 'Nice to have'] }
-  if (text.match(/meet|schedule|appointment/))
-    return { question: `When for "${itemText}"?`, suggestions: ['Today', 'Tomorrow', 'This week', 'Next week'] }
-  if (text.match(/read|learn|study|research/))
-    return { question: `How much time for "${itemText}"?`, suggestions: ['15 min', '1 hour', 'Deep dive', 'Just overview'] }
-  if (text.match(/clean|tidy|organiz|sort/))
-    return { question: `What scope for "${itemText}"?`, suggestions: ['Quick tidy', 'Deep clean', 'Specific area', 'Full room'] }
-  return { question: `How should you approach "${itemText}"?`, suggestions: ['Do it first', 'Batch with others', 'Delegate', 'Schedule it'] }
+  const text = itemText.toLowerCase().trim()
+
+  // Try product-specific match first
+  for (const entry of PRODUCT_MAP) {
+    if (entry.match.test(text)) {
+      return { question: entry.q, suggestions: entry.s }
+    }
+  }
+
+  // Fallback: ask for quantity/clarification generically
+  return {
+    question: 'Any details to add?',
+    suggestions: ['Small pack', 'Large pack', 'Organic', 'Store brand'],
+  }
 }
 
 export default function RefinementScreen({ items, onBack }) {
