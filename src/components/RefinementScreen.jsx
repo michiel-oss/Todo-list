@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import {
   CheckCircle, Stars01, ArrowNarrowRight, CheckDone01,
-  Download02, RefreshCw01, ZapCircle, ArrowRight
+  Send01, RefreshCw01, ZapCircle, ArrowRight
 } from 'untitledui-js/react'
 
 /* ── Product-specific suggestion map ── */
@@ -206,8 +206,8 @@ export default function RefinementScreen({ items, onBack }) {
 
         {/* Actions */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
-          <PrimaryButton icon={<Download02 size={18} color="var(--colors-fg-white)" />}>
-            Save &amp; Export
+          <PrimaryButton icon={<Send01 size={18} color="var(--colors-fg-white)" />}>
+            Send to Shopper
           </PrimaryButton>
           <button
             onClick={onBack}
