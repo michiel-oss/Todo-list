@@ -1,16 +1,236 @@
 @import "tailwindcss";
 
-* {
+/* ============================================
+   UNTITLED UI DESIGN TOKENS
+   Color primitives + semantic dark mode tokens
+   ============================================ */
+
+:root {
+  /* --- Color Primitives: Gray --- */
+  --color-gray-25:  #FCFCFD;
+  --color-gray-50:  #F9FAFB;
+  --color-gray-100: #F2F4F7;
+  --color-gray-200: #E4E7EC;
+  --color-gray-300: #D0D5DD;
+  --color-gray-400: #98A2B3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1D2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #0C111D;
+
+  /* --- Color Primitives: Brand (Purple) --- */
+  --color-brand-25:  #FCFAFF;
+  --color-brand-50:  #F9F5FF;
+  --color-brand-100: #F4EBFF;
+  --color-brand-200: #E9D7FE;
+  --color-brand-300: #D6BBFB;
+  --color-brand-400: #B692F6;
+  --color-brand-500: #9E77ED;
+  --color-brand-600: #7F56D9;
+  --color-brand-700: #6941C6;
+  --color-brand-800: #53389E;
+  --color-brand-900: #42307D;
+  --color-brand-950: #2C1C5F;
+
+  /* --- Color Primitives: Error --- */
+  --color-error-300: #FDA29B;
+  --color-error-400: #F97066;
+  --color-error-500: #F04438;
+  --color-error-600: #D92D20;
+  --color-error-700: #B42318;
+
+  /* --- Color Primitives: Success --- */
+  --color-success-300: #6CE9A6;
+  --color-success-400: #32D583;
+  --color-success-500: #12B76A;
+  --color-success-600: #039855;
+  --color-success-700: #027A48;
+
+  /* --- Color Primitives: Warning --- */
+  --color-warning-300: #FEC84B;
+  --color-warning-400: #FDB022;
+  --color-warning-500: #F79009;
+  --color-warning-600: #DC6803;
+
+  /* ============================================
+     SEMANTIC TOKENS — Dark Mode
+     ============================================ */
+
+  /* Backgrounds */
+  --colors-bg-primary:            #0C111D; /* gray-950 */
+  --colors-bg-secondary:          #161B26;
+  --colors-bg-tertiary:           #1F242F;
+  --colors-bg-quaternary:         #2A2F3A;
+  --colors-bg-active:             #1F242F;
+  --colors-bg-disabled:           #1D2939;
+  --colors-bg-overlay:            rgba(12, 17, 29, 0.8);
+  --colors-bg-brand-section:      #2C1C5F; /* brand-950 */
+  --colors-bg-brand-primary:      #7F56D9; /* brand-600 */
+  --colors-bg-brand-secondary:    #6941C6; /* brand-700 */
+
+  /* Foreground / Text */
+  --colors-fg-primary:            #F5F5F6;
+  --colors-fg-secondary:          #CECFD2;
+  --colors-fg-tertiary:           #94969C;
+  --colors-fg-quaternary:         #61656C;
+  --colors-fg-quinary:            #4B4F58;
+  --colors-fg-disabled:           #333741;
+  --colors-fg-disabled-subtle:    #1F242F;
+  --colors-fg-brand-primary:      #B692F6; /* brand-400 */
+  --colors-fg-brand-secondary:    #9E77ED; /* brand-500 */
+  --colors-fg-error-primary:      #F97066; /* error-400 */
+  --colors-fg-success-primary:    #47CD89;
+  --colors-fg-warning-primary:    #FDB022;
+  --colors-fg-white:              #FFFFFF;
+
+  /* Borders */
+  --colors-border-primary:        #333741;
+  --colors-border-secondary:      #1F242F;
+  --colors-border-tertiary:       #161B26;
+  --colors-border-disabled:       #1F242F;
+  --colors-border-disabled-subtle:#161B26;
+  --colors-border-brand:          #7F56D9; /* brand-600 */
+  --colors-border-brand-solid:    #6941C6; /* brand-700 */
+  --colors-border-error:          #F04438; /* error-500 */
+
+  /* Utility */
+  --colors-utility-brand-50-alt:  rgba(159, 119, 237, 0.1);
+  --colors-utility-brand-200:     #E9D7FE;
+  --colors-utility-gray-50:       rgba(255, 255, 255, 0.04);
+  --colors-utility-gray-100:      rgba(255, 255, 255, 0.06);
+
+  /* ============================================
+     TYPOGRAPHY TOKENS
+     ============================================ */
+  --font-family-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-mono:    'IBM Plex Mono', 'Fira Code', 'Fira Mono', monospace;
+
+  /* Display */
+  --font-size-display-2xl:  72px;
+  --font-size-display-xl:   60px;
+  --font-size-display-lg:   48px;
+  --font-size-display-md:   36px;
+  --font-size-display-sm:   30px;
+  --font-size-display-xs:   24px;
+
+  /* Text */
+  --font-size-text-xl:   20px;
+  --font-size-text-lg:   18px;
+  --font-size-text-md:   16px;
+  --font-size-text-sm:   14px;
+  --font-size-text-xs:   12px;
+
+  /* Font weights */
+  --font-weight-regular:   400;
+  --font-weight-medium:    500;
+  --font-weight-semibold:  600;
+  --font-weight-bold:      700;
+
+  /* Line heights */
+  --line-height-display-2xl: 90px;
+  --line-height-display-xl:  72px;
+  --line-height-display-lg:  60px;
+  --line-height-display-md:  44px;
+  --line-height-display-sm:  38px;
+  --line-height-display-xs:  32px;
+  --line-height-text-xl:     30px;
+  --line-height-text-lg:     28px;
+  --line-height-text-md:     24px;
+  --line-height-text-sm:     20px;
+  --line-height-text-xs:     18px;
+
+  /* Letter spacing */
+  --letter-spacing-display: -0.02em;
+  --letter-spacing-body:     0em;
+
+  /* ============================================
+     SPACING TOKENS
+     ============================================ */
+  --spacing-none:  0px;
+  --spacing-xxs:   2px;
+  --spacing-xs:    4px;
+  --spacing-sm:    6px;
+  --spacing-md:    8px;
+  --spacing-lg:    12px;
+  --spacing-xl:    16px;
+  --spacing-2xl:   20px;
+  --spacing-3xl:   24px;
+  --spacing-4xl:   32px;
+  --spacing-5xl:   40px;
+  --spacing-6xl:   48px;
+  --spacing-7xl:   64px;
+  --spacing-8xl:   80px;
+  --spacing-9xl:   96px;
+  --spacing-10xl:  128px;
+  --spacing-11xl:  160px;
+
+  /* ============================================
+     BORDER RADIUS TOKENS
+     ============================================ */
+  --radius-none:   0px;
+  --radius-xxs:    2px;
+  --radius-xs:     4px;
+  --radius-sm:     6px;
+  --radius-md:     8px;
+  --radius-lg:     10px;
+  --radius-xl:     12px;
+  --radius-2xl:    16px;
+  --radius-3xl:    20px;
+  --radius-4xl:    24px;
+  --radius-full:   9999px;
+
+  /* ============================================
+     SHADOW TOKENS
+     ============================================ */
+  --shadow-xs:    0px 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-sm:    0px 1px 2px rgba(16, 24, 40, 0.06), 0px 1px 3px rgba(16, 24, 40, 0.10);
+  --shadow-md:    0px 2px 4px rgba(16, 24, 40, 0.06), 0px 4px 8px rgba(16, 24, 40, 0.10);
+  --shadow-lg:    0px 4px 6px rgba(16, 24, 40, 0.03), 0px 12px 16px rgba(16, 24, 40, 0.08);
+  --shadow-xl:    0px 8px 8px rgba(16, 24, 40, 0.03), 0px 20px 24px rgba(16, 24, 40, 0.08);
+  --shadow-2xl:   0px 24px 48px rgba(16, 24, 40, 0.18);
+  --shadow-3xl:   0px 32px 64px rgba(16, 24, 40, 0.14);
+  --shadow-brand: 0px 0px 0px 4px rgba(127, 86, 217, 0.24);
+
+  /* ============================================
+     COMPONENT-SPECIFIC TOKENS
+     ============================================ */
+
+  /* Focus ring */
+  --focus-ring:  0px 0px 0px 4px rgba(127, 86, 217, 0.24);
+
+  /* Button padding */
+  --btn-padding-sm:  var(--spacing-md) var(--spacing-lg);
+  --btn-padding-md:  var(--spacing-md) var(--spacing-xl);
+  --btn-padding-lg:  var(--spacing-lg) var(--spacing-xl);
+  --btn-padding-xl:  var(--spacing-lg) var(--spacing-2xl);
+  --btn-padding-2xl: var(--spacing-xl) var(--spacing-3xl);
+}
+
+/* ============================================
+   BASE RESET & GLOBAL STYLES
+   ============================================ */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
-  background: #0a0a0f;
-  color: #f0eeff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--colors-bg-primary);
+  color: var(--colors-fg-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-text-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-text-md);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -19,37 +239,122 @@ body {
   flex-direction: column;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
-  50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.8); }
-}
-
-.slide-up {
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease forwards;
-}
-
-.todo-item {
-  animation: fadeIn 0.25s ease forwards;
-}
-
-.send-btn {
-  animation: pulse-glow 2.5s ease-in-out infinite;
-}
-
-input:focus {
+input:focus,
+button:focus-visible {
   outline: none;
+}
+
+/* ============================================
+   ANIMATION KEYFRAMES
+   ============================================ */
+@keyframes uui-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes uui-fade-in {
+  from { opacity: 0; transform: translateY(var(--spacing-md)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes uui-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes uui-pulse-brand {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(127, 86, 217, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(127, 86, 217, 0); }
+}
+
+.uui-fade-in {
+  animation: uui-fade-in 0.25s ease forwards;
+}
+
+.uui-scale-in {
+  animation: uui-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.uui-slide-up {
+  animation: uui-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.uui-pulse-brand {
+  animation: uui-pulse-brand 2.5s ease-in-out infinite;
+}
+
+/* ============================================
+   UNTITLED UI COMPONENT CLASSES
+   ============================================ */
+
+/* Badge */
+.uui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xxs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-text-xs);
+  border: 1px solid;
+}
+
+.uui-badge-brand {
+  background-color: rgba(127, 86, 217, 0.1);
+  border-color: rgba(127, 86, 217, 0.2);
+  color: var(--colors-fg-brand-primary);
+}
+
+/* Input */
+.uui-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background-color: var(--colors-bg-secondary);
+  border: 1px solid var(--colors-border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-md) var(--spacing-xl);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.uui-input-wrapper:focus-within {
+  border-color: var(--colors-border-brand);
+  box-shadow: var(--shadow-brand);
+}
+
+.uui-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-text-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-text-md);
+  color: var(--colors-fg-primary);
+}
+
+.uui-input::placeholder {
+  color: var(--colors-fg-quaternary);
+}
+
+/* Divider */
+.uui-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.uui-divider-line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--colors-border-secondary);
+}
+
+.uui-divider-label {
+  font-size: var(--font-size-text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--colors-fg-quinary);
+  white-space: nowrap;
 }

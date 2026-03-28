@@ -1,94 +1,63 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import {
+  CheckCircle, Stars01, ArrowNarrowRight, CheckDone01,
+  Download02, RefreshCw01, ZapCircle, ArrowRight
+} from 'untitledui-js/react'
 
-// AI question + suggestions per item based on keywords
+/* ── AI prompt map by keyword ── */
 function getAIPrompt(itemText) {
   const text = itemText.toLowerCase()
-
-  if (text.includes('buy') || text.includes('shop') || text.includes('get') || text.includes('purchase')) {
-    return {
-      question: `How urgent is "${itemText}"?`,
-      suggestions: ['Today', 'This week', 'Whenever', 'Running low'],
-    }
-  }
-  if (text.includes('email') || text.includes('message') || text.includes('call') || text.includes('contact') || text.includes('reply')) {
-    return {
-      question: `Who's the priority for "${itemText}"?`,
-      suggestions: ['Client', 'Boss', 'Team', 'Personal'],
-    }
-  }
-  if (text.includes('fix') || text.includes('bug') || text.includes('error') || text.includes('issue') || text.includes('broken')) {
-    return {
-      question: `How critical is "${itemText}"?`,
-      suggestions: ['Blocking', 'High priority', 'Low priority', 'Nice to have'],
-    }
-  }
-  if (text.includes('meet') || text.includes('call') || text.includes('schedule') || text.includes('appointment')) {
-    return {
-      question: `When for "${itemText}"?`,
-      suggestions: ['Today', 'Tomorrow', 'This week', 'Next week'],
-    }
-  }
-  if (text.includes('read') || text.includes('learn') || text.includes('study') || text.includes('research')) {
-    return {
-      question: `How much time for "${itemText}"?`,
-      suggestions: ['15 min', '1 hour', 'Deep dive', 'Just overview'],
-    }
-  }
-  if (text.includes('clean') || text.includes('tidy') || text.includes('organize') || text.includes('sort')) {
-    return {
-      question: `What area for "${itemText}"?`,
-      suggestions: ['Quick tidy', 'Deep clean', 'Specific spot', 'Full room'],
-    }
-  }
-
-  // Default
-  return {
-    question: `How should you approach "${itemText}"?`,
-    suggestions: ['Do it first', 'Batch with others', 'Delegate', 'Schedule it'],
-  }
+  if (text.match(/buy|shop|get|purchase/))
+    return { question: `How urgent is "${itemText}"?`, suggestions: ['Today', 'This week', 'Whenever', 'Running low'] }
+  if (text.match(/email|message|call|contact|reply/))
+    return { question: `Who's the priority for "${itemText}"?`, suggestions: ['Client', 'Boss', 'Team', 'Personal'] }
+  if (text.match(/fix|bug|error|issue|broken/))
+    return { question: `How critical is "${itemText}"?`, suggestions: ['Blocking', 'High priority', 'Low priority', 'Nice to have'] }
+  if (text.match(/meet|schedule|appointment/))
+    return { question: `When for "${itemText}"?`, suggestions: ['Today', 'Tomorrow', 'This week', 'Next week'] }
+  if (text.match(/read|learn|study|research/))
+    return { question: `How much time for "${itemText}"?`, suggestions: ['15 min', '1 hour', 'Deep dive', 'Just overview'] }
+  if (text.match(/clean|tidy|organiz|sort/))
+    return { question: `What scope for "${itemText}"?`, suggestions: ['Quick tidy', 'Deep clean', 'Specific area', 'Full room'] }
+  return { question: `How should you approach "${itemText}"?`, suggestions: ['Do it first', 'Batch with others', 'Delegate', 'Schedule it'] }
 }
 
-const STEPS_PER_ITEM = 1
-
 export default function RefinementScreen({ items, onBack }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers] = useState({})
-  const [customInput, setCustomInput] = useState('')
-  const [drawerVisible, setDrawerVisible] = useState(false)
-  const [done, setDone] = useState(false)
+  const [currentIndex, setCurrentIndex]   = useState(0)
+  const [answers, setAnswers]             = useState({})
+  const [customInput, setCustomInput]     = useState('')
+  const [drawerOpen, setDrawerOpen]       = useState(false)
+  const [done, setDone]                   = useState(false)
   const inputRef = useRef(null)
 
-  const total = items.length
-  const progress = Math.round(((currentIndex) / total) * 100)
-  const progressFinal = done ? 100 : progress
-
+  const total       = items.length
+  const progress    = done ? 100 : Math.round((currentIndex / total) * 100)
   const currentItem = items[currentIndex]
-  const prompt = currentItem ? getAIPrompt(currentItem.text) : null
+  const prompt      = currentItem ? getAIPrompt(currentItem.text) : null
 
+  /* Open drawer after mount */
   useEffect(() => {
-    const timer = setTimeout(() => setDrawerVisible(true), 300)
-    return () => clearTimeout(timer)
+    const t = setTimeout(() => setDrawerOpen(true), 250)
+    return () => clearTimeout(t)
   }, [currentIndex])
 
+  /* Focus input when drawer opens */
   useEffect(() => {
-    if (drawerVisible) {
-      setTimeout(() => inputRef.current?.focus(), 100)
-    }
-  }, [drawerVisible])
+    if (drawerOpen) setTimeout(() => inputRef.current?.focus(), 150)
+  }, [drawerOpen])
 
   function handleAnswer(answer) {
-    const newAnswers = { ...answers, [currentItem.id]: answer }
-    setAnswers(newAnswers)
-    setDrawerVisible(false)
+    const next = { ...answers, [currentItem.id]: answer }
+    setAnswers(next)
+    setDrawerOpen(false)
 
     if (currentIndex + 1 >= total) {
-      setTimeout(() => setDone(true), 400)
+      setTimeout(() => setDone(true), 350)
     } else {
       setTimeout(() => {
         setCurrentIndex(i => i + 1)
         setCustomInput('')
-        setDrawerVisible(true)
-      }, 350)
+      }, 300)
     }
   }
 
@@ -97,48 +66,68 @@ export default function RefinementScreen({ items, onBack }) {
     if (customInput.trim()) handleAnswer(customInput.trim())
   }
 
-  // Done screen
+  /* ── Done screen ── */
   if (done) {
     return (
-      <div className="flex flex-col min-h-svh max-w-md mx-auto w-full px-5 pt-14 pb-8">
+      <div style={pageStyle}>
         {/* Progress — full */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-white/40 text-xs">All done</span>
-            <span className="text-violet-400 text-xs font-semibold">100%</span>
-          </div>
-          <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-700 ease-out w-full" />
-          </div>
-        </div>
+        <ProgressBar progress={100} current={total} total={total} done />
 
-        <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 flex items-center justify-center mb-6">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M8 18l7 7 13-13" stroke="url(#g)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <defs>
-                <linearGradient id="g" x1="8" y1="18" x2="28" y2="18" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#8b5cf6"/>
-                  <stop offset="1" stopColor="#d946ef"/>
-                </linearGradient>
-              </defs>
-            </svg>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: 'var(--spacing-5xl)' }}>
+          {/* Success icon */}
+          <div style={{
+            width: '80px', height: '80px',
+            borderRadius: 'var(--radius-3xl)',
+            background: 'linear-gradient(135deg, rgba(127,86,217,0.15), rgba(103,65,198,0.15))',
+            border: '1px solid rgba(127,86,217,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 'var(--spacing-3xl)',
+          }}>
+            <CheckDone01 size={36} color="var(--color-brand-400)" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Your list is refined!</h2>
-          <p className="text-white/40 text-sm mb-8">Here's your prioritized task list</p>
 
-          <div className="w-full space-y-2 text-left">
+          <h2 style={{
+            fontFamily: 'var(--font-family-display)',
+            fontSize: 'var(--font-size-display-xs)',
+            fontWeight: 'var(--font-weight-semibold)',
+            lineHeight: 'var(--line-height-display-xs)',
+            letterSpacing: 'var(--letter-spacing-display)',
+            color: 'var(--colors-fg-primary)',
+            marginBottom: 'var(--spacing-md)',
+            textAlign: 'center',
+          }}>Your list is refined!</h2>
+
+          <p style={{
+            fontSize: 'var(--font-size-text-md)',
+            color: 'var(--colors-fg-tertiary)',
+            marginBottom: 'var(--spacing-5xl)',
+            textAlign: 'center',
+          }}>Here's your prioritised task list</p>
+
+          {/* Refined items */}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
             {items.map((item, i) => (
-              <div key={item.id} className="fade-in flex items-start gap-3 bg-white/5 border border-white/8 rounded-xl px-4 py-3.5" style={{ animationDelay: `${i * 60}ms` }}>
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2 5l2.5 2.5L8 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white/85 text-sm">{item.text}</p>
+              <div
+                key={item.id}
+                className="uui-fade-in"
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-lg)',
+                  background: 'var(--colors-bg-secondary)',
+                  border: '1px solid var(--colors-border-secondary)',
+                  borderRadius: 'var(--radius-xl)',
+                  padding: 'var(--spacing-lg) var(--spacing-xl)',
+                  animationDelay: `${i * 60}ms`,
+                }}
+              >
+                <CheckCircle size={20} color="var(--color-brand-500)" style={{ flexShrink: 0, marginTop: '1px' }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 'var(--font-size-text-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--colors-fg-secondary)' }}>
+                    {item.text}
+                  </p>
                   {answers[item.id] && (
-                    <p className="text-violet-400/70 text-xs mt-0.5">{answers[item.id]}</p>
+                    <p style={{ fontSize: 'var(--font-size-text-xs)', color: 'var(--colors-fg-brand-secondary)', marginTop: 'var(--spacing-xxs)' }}>
+                      {answers[item.id]}
+                    </p>
                   )}
                 </div>
               </div>
@@ -146,14 +135,28 @@ export default function RefinementScreen({ items, onBack }) {
           </div>
         </div>
 
-        <div className="mt-6 space-y-3">
-          <button className="w-full py-4 rounded-2xl font-semibold text-base bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white transition-all duration-200">
-            Save & Export
-          </button>
+        {/* Actions */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+          <PrimaryButton icon={<Download02 size={18} color="var(--colors-fg-white)" />}>
+            Save &amp; Export
+          </PrimaryButton>
           <button
             onClick={onBack}
-            className="w-full py-3 rounded-2xl font-medium text-sm text-white/40 hover:text-white/70 transition-colors duration-150"
+            style={{
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              fontFamily: 'var(--font-family-body)',
+              fontSize: 'var(--font-size-text-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              color: 'var(--colors-fg-quinary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 'var(--spacing-md)',
+              padding: 'var(--spacing-md)',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--colors-fg-tertiary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--colors-fg-quinary)'}
           >
+            <RefreshCw01 size={14} color="currentColor" />
             Start over
           </button>
         </div>
@@ -161,70 +164,71 @@ export default function RefinementScreen({ items, onBack }) {
     )
   }
 
+  /* ── Refinement screen ── */
   return (
-    <div className="flex flex-col min-h-svh max-w-md mx-auto w-full relative">
-      {/* Main content */}
-      <div className="flex-1 px-5 pt-14 pb-60">
-        {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-white/40 text-xs">
-              {currentIndex + 1} of {total}
-            </span>
-            <span
-              className="text-xs font-semibold transition-colors duration-300"
-              style={{ color: `hsl(${260 + progressFinal * 0.6}, 80%, ${65 + progressFinal * 0.1}%)` }}
-            >
-              {progressFinal}%
-            </span>
-          </div>
-          <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{
-                width: `${progressFinal}%`,
-                background: `linear-gradient(90deg, #8b5cf6 0%, #d946ef ${progressFinal}%)`,
-                boxShadow: `0 0 ${8 + progressFinal * 0.2}px rgba(139,92,246,${0.3 + progressFinal * 0.004})`,
-              }}
-            />
-          </div>
-          {progressFinal >= 50 && (
-            <p className="text-violet-400/60 text-xs mt-1.5 text-right fade-in">Almost there!</p>
-          )}
-        </div>
+    <div style={{ ...pageStyle, position: 'relative' }}>
+      {/* Progress */}
+      <ProgressBar progress={progress} current={currentIndex + 1} total={total} />
 
-        {/* Items overview */}
-        <div className="space-y-2">
+      {/* Items overview */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '280px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           {items.map((item, i) => {
-            const isDone = i < currentIndex
+            const isDone    = i < currentIndex
             const isCurrent = i === currentIndex
             return (
               <div
                 key={item.id}
-                className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${
-                  isCurrent
-                    ? 'bg-violet-500/10 border border-violet-500/30'
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)',
+                  borderRadius: 'var(--radius-xl)',
+                  padding: 'var(--spacing-lg) var(--spacing-xl)',
+                  border: '1px solid',
+                  borderColor: isCurrent ? 'var(--colors-border-brand)' : 'var(--colors-border-secondary)',
+                  background: isCurrent
+                    ? 'rgba(127,86,217,0.06)'
                     : isDone
-                    ? 'bg-white/3 border border-white/5 opacity-50'
-                    : 'bg-white/3 border border-white/5 opacity-30'
-                }`}
+                    ? 'var(--colors-bg-secondary)'
+                    : 'var(--colors-bg-tertiary)',
+                  opacity: !isCurrent && !isDone ? 0.4 : 1,
+                  transition: 'all 0.2s ease',
+                }}
               >
-                <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-300 ${
-                  isDone
-                    ? 'bg-gradient-to-br from-violet-500 to-fuchsia-500'
-                    : isCurrent
-                    ? 'border-2 border-violet-400 animate-pulse'
-                    : 'border-2 border-white/15'
-                }`}>
-                  {isDone && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 5l2.5 2.5L8 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </div>
-                <span className={`text-sm flex-1 ${isCurrent ? 'text-white' : 'text-white/50'}`}>{item.text}</span>
+                {/* Status dot */}
+                {isDone ? (
+                  <CheckCircle size={20} color="var(--color-brand-500)" style={{ flexShrink: 0 }} />
+                ) : isCurrent ? (
+                  <div style={{
+                    width: '20px', height: '20px', flexShrink: 0,
+                    borderRadius: 'var(--radius-full)',
+                    border: '2px solid var(--color-brand-500)',
+                    animation: 'uui-pulse-brand 2s ease-in-out infinite',
+                  }} />
+                ) : (
+                  <div style={{
+                    width: '20px', height: '20px', flexShrink: 0,
+                    borderRadius: 'var(--radius-full)',
+                    border: '2px solid var(--colors-border-primary)',
+                  }} />
+                )}
+
+                <span style={{
+                  flex: 1,
+                  fontSize: 'var(--font-size-text-sm)',
+                  fontWeight: isCurrent ? 'var(--font-weight-medium)' : 'var(--font-weight-regular)',
+                  color: isCurrent ? 'var(--colors-fg-primary)' : isDone ? 'var(--colors-fg-tertiary)' : 'var(--colors-fg-quinary)',
+                }}>
+                  {item.text}
+                </span>
+
                 {isDone && answers[item.id] && (
-                  <span className="text-violet-400/60 text-xs">{answers[item.id]}</span>
+                  <span style={{
+                    fontSize: 'var(--font-size-text-xs)',
+                    color: 'var(--colors-fg-brand-secondary)',
+                    fontWeight: 'var(--font-weight-medium)',
+                  }}>
+                    {answers[item.id]}
+                  </span>
                 )}
               </div>
             )
@@ -232,78 +236,130 @@ export default function RefinementScreen({ items, onBack }) {
         </div>
       </div>
 
-      {/* Bottom Drawer */}
+      {/* ── Bottom Drawer ── */}
       <div
-        className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md transition-all duration-400 ease-out ${
-          drawerVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-        }`}
-        style={{ transform: `translateX(-50%) translateY(${drawerVisible ? '0' : '100%'})` }}
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: '50%',
+          width: '100%',
+          maxWidth: '448px',
+          transform: `translateX(-50%) translateY(${drawerOpen ? '0' : '100%'})`,
+          transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          zIndex: 10,
+        }}
       >
-        <div className="bg-[#13131a] border-t border-white/10 rounded-t-3xl px-5 pt-5 pb-6 shadow-[0_-20px_60px_rgba(0,0,0,0.6)]">
-          {/* Drag indicator */}
-          <div className="w-10 h-1 bg-white/15 rounded-full mx-auto mb-5" />
+        <div style={{
+          background: 'var(--colors-bg-secondary)',
+          borderTop: '1px solid var(--colors-border-primary)',
+          borderRadius: `var(--radius-3xl) var(--radius-3xl) 0 0`,
+          padding: 'var(--spacing-2xl) var(--spacing-2xl) var(--spacing-4xl)',
+          boxShadow: 'var(--shadow-2xl)',
+        }}>
+          {/* Handle */}
+          <div style={{
+            width: '40px', height: '4px',
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--colors-border-primary)',
+            margin: `0 auto var(--spacing-2xl)`,
+          }} />
 
-          {/* AI Label */}
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M5.5 1.5c0 0 .8 2 2 2.5s2.5.5 2.5.5-2 .8-2.5 2-0.5 2.5-.5 2.5-.8-2-2-2.5S3 6 3 6s2-.8 2.5-2 0-2.5 0-2.5z" fill="white"/>
-              </svg>
+          {/* AI label */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)',
+            marginBottom: 'var(--spacing-lg)',
+          }}>
+            <div style={{
+              width: '24px', height: '24px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'linear-gradient(135deg, var(--color-brand-600), var(--color-brand-800))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Stars01 size={13} color="var(--colors-fg-white)" />
             </div>
-            <span className="text-white/50 text-xs font-medium">AI suggestion</span>
+            <span style={{
+              fontSize: 'var(--font-size-text-xs)',
+              fontWeight: 'var(--font-weight-medium)',
+              color: 'var(--colors-fg-tertiary)',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+            }}>
+              AI suggestion
+            </span>
           </div>
 
           {/* Question */}
           {prompt && (
-            <p className="text-white font-medium text-base mb-4 leading-snug">
+            <p style={{
+              fontFamily: 'var(--font-family-display)',
+              fontSize: 'var(--font-size-text-lg)',
+              fontWeight: 'var(--font-weight-semibold)',
+              lineHeight: 'var(--line-height-text-lg)',
+              color: 'var(--colors-fg-primary)',
+              marginBottom: 'var(--spacing-xl)',
+            }}>
               {prompt.question}
             </p>
           )}
 
-          {/* Suggestion buttons grid */}
+          {/* Suggestion grid */}
           {prompt && (
-            <div className="grid grid-cols-2 gap-2 mb-4">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 'var(--spacing-md)',
+              marginBottom: 'var(--spacing-xl)',
+            }}>
               {prompt.suggestions.map((suggestion) => (
-                <button
+                <SuggestionButton
                   key={suggestion}
+                  label={suggestion}
                   onClick={() => handleAnswer(suggestion)}
-                  className="py-2.5 px-4 rounded-xl bg-white/6 border border-white/10 hover:bg-violet-500/15 hover:border-violet-500/40 text-white/80 hover:text-white text-sm font-medium transition-all duration-150 text-left"
-                >
-                  {suggestion}
-                </button>
+                />
               ))}
             </div>
           )}
 
           {/* Divider */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex-1 h-px bg-white/8" />
-            <span className="text-white/25 text-xs">or type your own</span>
-            <div className="flex-1 h-px bg-white/8" />
+          <div className="uui-divider" style={{ marginBottom: 'var(--spacing-xl)' }}>
+            <div className="uui-divider-line" />
+            <span className="uui-divider-label">or type your own</span>
+            <div className="uui-divider-line" />
           </div>
 
           {/* Custom input */}
           <form onSubmit={handleCustomSubmit}>
-            <div className="flex items-center gap-3 bg-white/6 border border-white/12 focus-within:border-violet-500/50 focus-within:bg-white/8 rounded-xl px-4 py-3 transition-all duration-200">
+            <div className="uui-input-wrapper">
               <input
                 ref={inputRef}
+                className="uui-input"
                 value={customInput}
                 onChange={e => setCustomInput(e.target.value)}
                 placeholder="Custom answer..."
-                className="flex-1 bg-transparent text-white placeholder-white/25 text-sm"
+                style={{ fontSize: 'var(--font-size-text-sm)' }}
               />
               <button
                 type="submit"
                 disabled={!customInput.trim()}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                  customInput.trim()
-                    ? 'bg-violet-500 hover:bg-violet-400 text-white'
-                    : 'bg-white/5 text-white/20'
-                }`}
+                style={{
+                  width: '32px', height: '32px',
+                  borderRadius: 'var(--radius-md)',
+                  background: customInput.trim()
+                    ? 'linear-gradient(135deg, var(--color-brand-600), var(--color-brand-700))'
+                    : 'var(--colors-bg-tertiary)',
+                  border: 'none',
+                  cursor: customInput.trim() ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'background 0.15s ease',
+                }}
+                aria-label="Submit"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <ArrowNarrowRight
+                  size={16}
+                  color={customInput.trim() ? 'var(--colors-fg-white)' : 'var(--colors-fg-disabled)'}
+                />
               </button>
             </div>
           </form>
@@ -311,4 +367,135 @@ export default function RefinementScreen({ items, onBack }) {
       </div>
     </div>
   )
+}
+
+/* ── Shared sub-components ── */
+
+function ProgressBar({ progress, current, total, done }) {
+  return (
+    <div style={{ marginBottom: 'var(--spacing-4xl)' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 'var(--spacing-md)',
+      }}>
+        <span style={{
+          fontSize: 'var(--font-size-text-xs)',
+          fontWeight: 'var(--font-weight-medium)',
+          color: 'var(--colors-fg-quinary)',
+        }}>
+          {done ? 'All done' : `${current} of ${total}`}
+        </span>
+        <span style={{
+          fontSize: 'var(--font-size-text-xs)',
+          fontWeight: 'var(--font-weight-semibold)',
+          color: progress >= 50 ? 'var(--color-brand-400)' : 'var(--colors-fg-tertiary)',
+          transition: 'color 0.3s ease',
+        }}>
+          {progress}%
+        </span>
+      </div>
+
+      {/* Track */}
+      <div style={{
+        height: '6px',
+        background: 'var(--colors-bg-tertiary)',
+        borderRadius: 'var(--radius-full)',
+        overflow: 'hidden',
+      }}>
+        {/* Fill */}
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          borderRadius: 'var(--radius-full)',
+          background: `linear-gradient(90deg, var(--color-brand-700) 0%, var(--color-brand-500) 100%)`,
+          boxShadow: progress > 0 ? `0 0 ${6 + progress * 0.12}px rgba(127,86,217,${0.3 + progress * 0.003})` : 'none',
+          transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+        }} />
+      </div>
+
+      {progress >= 50 && !done && (
+        <p style={{
+          fontSize: 'var(--font-size-text-xs)',
+          color: 'var(--color-brand-400)',
+          marginTop: 'var(--spacing-sm)',
+          textAlign: 'right',
+          opacity: 0.8,
+        }}
+        className="uui-fade-in"
+        >
+          Almost there!
+        </p>
+      )}
+    </div>
+  )
+}
+
+function SuggestionButton({ label, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: 'var(--spacing-md) var(--spacing-xl)',
+        borderRadius: 'var(--radius-xl)',
+        background: hovered ? 'rgba(127,86,217,0.12)' : 'var(--colors-bg-tertiary)',
+        border: `1px solid ${hovered ? 'var(--colors-border-brand)' : 'var(--colors-border-primary)'}`,
+        cursor: 'pointer',
+        fontFamily: 'var(--font-family-body)',
+        fontSize: 'var(--font-size-text-sm)',
+        fontWeight: 'var(--font-weight-medium)',
+        color: hovered ? 'var(--colors-fg-primary)' : 'var(--colors-fg-secondary)',
+        textAlign: 'left',
+        transition: 'all 0.15s ease',
+        boxShadow: hovered ? 'var(--shadow-brand)' : 'none',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function PrimaryButton({ children, icon, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="uui-pulse-brand"
+      style={{
+        width: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: 'var(--spacing-md)',
+        padding: 'var(--spacing-lg) var(--spacing-3xl)',
+        borderRadius: 'var(--radius-xl)',
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily: 'var(--font-family-body)',
+        fontSize: 'var(--font-size-text-md)',
+        fontWeight: 'var(--font-weight-semibold)',
+        color: 'var(--colors-fg-white)',
+        background: `linear-gradient(135deg, var(--color-brand-600), var(--color-brand-700))`,
+        opacity: hovered ? 0.9 : 1,
+        transform: hovered ? 'translateY(-1px)' : 'none',
+        transition: 'opacity 0.15s ease, transform 0.15s ease',
+      }}
+    >
+      {children}
+      {icon}
+    </button>
+  )
+}
+
+/* ── Layout helper ── */
+const pageStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: '100svh',
+  maxWidth: '448px',
+  margin: '0 auto',
+  width: '100%',
+  padding: `var(--spacing-7xl) var(--spacing-2xl) var(--spacing-4xl)`,
 }
