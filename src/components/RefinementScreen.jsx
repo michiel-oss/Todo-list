@@ -91,24 +91,31 @@ function getAIPrompt(itemText) {
   }
 }
 
+const TOTAL_STEPS = 2
+const quantityPrompt = { question: 'How many?', suggestions: ['1', '2', '3', '4'] }
+
 export default function RefinementScreen({ items, onBack }) {
   const [currentIndex, setCurrentIndex]   = useState(0)
+  const [currentStep, setCurrentStep]     = useState(0)
   const [answers, setAnswers]             = useState({})
   const [customInput, setCustomInput]     = useState('')
   const [drawerOpen, setDrawerOpen]       = useState(false)
   const [done, setDone]                   = useState(false)
   const inputRef = useRef(null)
 
-  const total       = items.length
-  const progress    = done ? 100 : Math.round((currentIndex / total) * 100)
-  const currentItem = items[currentIndex]
-  const prompt      = currentItem ? getAIPrompt(currentItem.text) : null
+  const total        = items.length
+  const totalSteps   = total * TOTAL_STEPS
+  const stepsCompleted = currentIndex * TOTAL_STEPS + currentStep
+  const progress     = done ? 100 : Math.round((stepsCompleted / totalSteps) * 100)
+  const currentItem  = items[currentIndex]
+  const detailPrompt = currentItem ? getAIPrompt(currentItem.text) : null
+  const activePrompt = currentStep === 0 ? detailPrompt : quantityPrompt
 
-  /* Open drawer after mount */
+  /* Open drawer after mount / step change */
   useEffect(() => {
     const t = setTimeout(() => setDrawerOpen(true), 250)
     return () => clearTimeout(t)
-  }, [currentIndex])
+  }, [currentIndex, currentStep])
 
   /* Focus input when drawer opens */
   useEffect(() => {
@@ -116,17 +123,22 @@ export default function RefinementScreen({ items, onBack }) {
   }, [drawerOpen])
 
   function handleAnswer(answer) {
-    const next = { ...answers, [currentItem.id]: answer }
-    setAnswers(next)
     setDrawerOpen(false)
+    setCustomInput('')
 
-    if (currentIndex + 1 >= total) {
-      setTimeout(() => setDone(true), 350)
+    if (currentStep === 0) {
+      setAnswers(prev => ({ ...prev, [currentItem.id]: { detail: answer, quantity: '' } }))
+      setTimeout(() => setCurrentStep(1), 300)
     } else {
-      setTimeout(() => {
-        setCurrentIndex(i => i + 1)
-        setCustomInput('')
-      }, 300)
+      setAnswers(prev => ({ ...prev, [currentItem.id]: { ...prev[currentItem.id], quantity: answer } }))
+      if (currentIndex + 1 >= total) {
+        setTimeout(() => setDone(true), 350)
+      } else {
+        setTimeout(() => {
+          setCurrentIndex(i => i + 1)
+          setCurrentStep(0)
+        }, 300)
+      }
     }
   }
 
@@ -195,7 +207,7 @@ export default function RefinementScreen({ items, onBack }) {
                   </p>
                   {answers[item.id] && (
                     <p style={{ fontSize: 'var(--font-size-text-xs)', color: 'var(--colors-fg-brand-secondary)', marginTop: 'var(--spacing-xxs)' }}>
-                      {answers[item.id]}
+                      {[answers[item.id].detail, answers[item.id].quantity].filter(Boolean).join(' · ')}
                     </p>
                   )}
                 </div>
@@ -237,7 +249,7 @@ export default function RefinementScreen({ items, onBack }) {
   return (
     <div style={{ ...pageStyle, position: 'relative' }}>
       {/* Progress */}
-      <ProgressBar progress={progress} current={currentIndex + 1} total={total} />
+      <ProgressBar progress={progress} current={stepsCompleted + 1} total={totalSteps} />
 
       {/* Items overview */}
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '280px' }}>
@@ -296,7 +308,7 @@ export default function RefinementScreen({ items, onBack }) {
                     color: 'var(--colors-fg-brand-secondary)',
                     fontWeight: 'var(--font-weight-medium)',
                   }}>
-                    {answers[item.id]}
+                    {[answers[item.id].detail, answers[item.id].quantity].filter(Boolean).join(' · ')}
                   </span>
                 )}
               </div>
@@ -333,7 +345,7 @@ export default function RefinementScreen({ items, onBack }) {
             margin: `0 auto var(--spacing-2xl)`,
           }} />
 
-          {/* AI label */}
+          {/* AI label + product chip */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)',
             marginBottom: 'var(--spacing-lg)',
@@ -356,10 +368,24 @@ export default function RefinementScreen({ items, onBack }) {
             }}>
               AI suggestion
             </span>
+            {currentItem && (
+              <span style={{
+                fontSize: 'var(--font-size-text-xs)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--colors-fg-brand-primary)',
+                background: 'rgba(127,86,217,0.12)',
+                border: '1px solid rgba(127,86,217,0.2)',
+                borderRadius: 'var(--radius-full)',
+                padding: '2px 10px',
+                marginLeft: 'auto',
+              }}>
+                {currentItem.text}
+              </span>
+            )}
           </div>
 
           {/* Question */}
-          {prompt && (
+          {activePrompt && (
             <p style={{
               fontFamily: 'var(--font-family-display)',
               fontSize: 'var(--font-size-text-lg)',
@@ -368,19 +394,19 @@ export default function RefinementScreen({ items, onBack }) {
               color: 'var(--colors-fg-primary)',
               marginBottom: 'var(--spacing-xl)',
             }}>
-              {prompt.question}
+              {activePrompt.question}
             </p>
           )}
 
           {/* Suggestion grid */}
-          {prompt && (
+          {activePrompt && (
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: 'var(--spacing-md)',
               marginBottom: 'var(--spacing-xl)',
             }}>
-              {prompt.suggestions.map((suggestion) => (
+              {activePrompt.suggestions.map((suggestion) => (
                 <SuggestionButton
                   key={suggestion}
                   label={suggestion}
