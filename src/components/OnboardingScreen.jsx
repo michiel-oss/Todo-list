@@ -9,9 +9,8 @@ import {
   GOALS, HOUSEHOLD_SIZES, PRODUCT_PREFS, DIETS,
   emptyProfile, labelFor, quantitySuggestions,
 } from '../profile'
+import { mergeCopy, fill, ONBOARDING_STEPS as STEPS, QUESTION_STEPS } from '../onboardingCopy'
 
-const QUESTION_STEPS = ['name', 'goals', 'household', 'preferences']
-const STEPS = ['welcome', 'intro', ...QUESTION_STEPS, 'done']
 
 const GOAL_ICONS = {
   groceries: ShoppingCart01,
@@ -36,11 +35,16 @@ const slide = {
   exit:   dir => ({ opacity: 0, x: dir * -32 }),
 }
 
-export default function OnboardingScreen({ initialProfile, onComplete }) {
-  const [stepIndex, setStepIndex] = useState(initialProfile ? STEPS.indexOf('name') : 0)
+export default function OnboardingScreen({ initialProfile, initialStep, copy: copyOverrides, embedded, onComplete }) {
+  const [stepIndex, setStepIndex] = useState(() => {
+    const start = initialStep ?? (initialProfile ? 'name' : 'welcome')
+    return Math.max(STEPS.indexOf(start), 0)
+  })
   const [direction, setDirection] = useState(1)
   const [profile, setProfile]     = useState({ ...emptyProfile, ...initialProfile })
 
+  const copy = mergeCopy(copyOverrides)
+  const name = profile.name.trim()
   const step = STEPS[stepIndex]
   const questionIndex = QUESTION_STEPS.indexOf(step)
 
@@ -77,6 +81,7 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
         <StepHeader
           current={questionIndex}
           total={QUESTION_STEPS.length}
+          copy={copy.common}
           onBack={() => go(-1)}
           onSkip={finish}
         />
@@ -94,20 +99,22 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
           style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
         >
           {step === 'welcome' && (
-            <WelcomeStep onStart={() => go(1)} onSkip={finish} />
+            <WelcomeStep copy={copy.welcome} onStart={() => go(1)} onSkip={finish} />
           )}
 
           {step === 'intro' && (
-            <IntroStep onContinue={() => go(1)} onBack={() => go(-1)} />
+            <IntroStep copy={copy.intro} onContinue={() => go(1)} onBack={() => go(-1)} />
           )}
 
           {step === 'name' && (
             <QuestionLayout
-              title="What should we call you?"
-              subtitle="We'll use it to make your lists feel like yours."
-              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)} icon={arrowIcon}>Continue</PrimaryButton>}
+              title={fill(copy.name.title, { name })}
+              subtitle={fill(copy.name.subtitle, { name })}
+              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)} icon={arrowIcon}>{copy.common.continue}</PrimaryButton>}
             >
               <NameInput
+                autoFocus={!embedded}
+                placeholder={copy.name.placeholder}
                 value={profile.name}
                 onChange={name => update({ name })}
                 onSubmit={() => canContinue && go(1)}
@@ -117,9 +124,9 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
 
           {step === 'goals' && (
             <QuestionLayout
-              title={<>What will you use it for{profile.name.trim() ? `, ${profile.name.trim()}` : ''}?</>}
-              subtitle="Pick as many as you like."
-              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)} icon={arrowIcon}>Continue</PrimaryButton>}
+              title={fill(copy.goals.title, { name })}
+              subtitle={fill(copy.goals.subtitle, { name })}
+              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)} icon={arrowIcon}>{copy.common.continue}</PrimaryButton>}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
                 {GOALS.map((goal, i) => (
@@ -139,9 +146,9 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
 
           {step === 'household' && (
             <QuestionLayout
-              title="Who are you shopping for?"
-              subtitle="We'll suggest quantities that fit your household."
-              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)} icon={arrowIcon}>Continue</PrimaryButton>}
+              title={fill(copy.household.title, { name })}
+              subtitle={fill(copy.household.subtitle, { name })}
+              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)} icon={arrowIcon}>{copy.common.continue}</PrimaryButton>}
             >
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
                 {HOUSEHOLD_SIZES.map((size, i) => (
@@ -150,7 +157,7 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
                     index={i}
                     icon={HOUSEHOLD_ICONS[size.id]}
                     label={size.label}
-                    hint={`Suggests ${quantitySuggestions({ household: size.id }).join(', ')}`}
+                    hint={fill(copy.household.hint, { quantities: quantitySuggestions({ household: size.id }).join(', ') })}
                     selected={profile.household === size.id}
                     onClick={() => update({ household: size.id })}
                   />
@@ -161,11 +168,11 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
 
           {step === 'preferences' && (
             <QuestionLayout
-              title="Any preferences?"
-              subtitle="AI will put these options first when it asks about an item."
-              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)}>Finish setup</PrimaryButton>}
+              title={fill(copy.preferences.title, { name })}
+              subtitle={fill(copy.preferences.subtitle, { name })}
+              footer={<PrimaryButton disabled={!canContinue} onClick={() => go(1)}>{copy.preferences.cta}</PrimaryButton>}
             >
-              <FieldLabel>When choosing products, I go for</FieldLabel>
+              <FieldLabel>{copy.preferences.productLabel}</FieldLabel>
               <div style={chipWrap}>
                 {PRODUCT_PREFS.map(pref => (
                   <Chip
@@ -177,7 +184,7 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
                 ))}
               </div>
 
-              <FieldLabel optional>Dietary needs</FieldLabel>
+              <FieldLabel optional={copy.preferences.optional}>{copy.preferences.dietLabel}</FieldLabel>
               <div style={chipWrap}>
                 {DIETS.map(diet => (
                   <Chip
@@ -193,7 +200,7 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
           )}
 
           {step === 'done' && (
-            <DoneStep profile={profile} onFinish={finish} onEdit={() => go(-QUESTION_STEPS.length)} />
+            <DoneStep copy={copy.done} profile={profile} onFinish={finish} onEdit={() => go(-QUESTION_STEPS.length)} />
           )}
         </Motion.div>
       </AnimatePresence>
@@ -203,7 +210,7 @@ export default function OnboardingScreen({ initialProfile, onComplete }) {
 
 /* ── Steps ── */
 
-function WelcomeStep({ onStart, onSkip }) {
+function WelcomeStep({ copy, onStart, onSkip }) {
   return (
     <>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -211,34 +218,32 @@ function WelcomeStep({ onStart, onSkip }) {
 
         <div className="uui-badge uui-badge-brand" style={{ marginBottom: 'var(--spacing-xl)', alignSelf: 'flex-start' }}>
           <span style={pulseDot} />
-          AI-powered
+          {copy.badge}
         </div>
 
         <h1 style={displayHeading}>
-          Shopping lists that{' '}
-          <span style={gradientText}>think ahead</span>
+          {copy.titleStart}{' '}
+          <span style={gradientText}>{copy.titleHighlight}</span>
         </h1>
 
-        <p style={bodyText}>
-          Jot down what you need. We'll ask the quick questions so nothing on your list stays vague.
-        </p>
+        <p style={bodyText}>{copy.body}</p>
       </div>
 
       <div style={footerStyle}>
         <PrimaryButton pulse onClick={onStart} icon={<ArrowRight size={18} color="var(--colors-fg-white)" />}>
-          Get started
+          {copy.cta}
         </PrimaryButton>
-        <GhostButton onClick={onSkip}>Skip setup</GhostButton>
+        <GhostButton onClick={onSkip}>{copy.skip}</GhostButton>
       </div>
     </>
   )
 }
 
-function IntroStep({ onContinue, onBack }) {
+function IntroStep({ copy, onContinue, onBack }) {
   const points = [
-    { icon: List,        title: 'Jot it down',            body: 'Type items as they come to mind. "Milk" is enough.' },
-    { icon: Stars01,     title: 'Answer quick questions', body: 'AI asks which type and how many. One tap each.' },
-    { icon: CheckDone01, title: 'Get a clean list',       body: 'Every item refined and ready for your shopper.' },
+    { icon: List,        title: copy.step1Title, body: copy.step1Body },
+    { icon: Stars01,     title: copy.step2Title, body: copy.step2Body },
+    { icon: CheckDone01, title: copy.step3Title, body: copy.step3Body },
   ]
 
   return (
@@ -248,8 +253,8 @@ function IntroStep({ onContinue, onBack }) {
       </div>
 
       <div style={{ flex: 1 }}>
-        <h1 style={{ ...displayHeading, marginBottom: 'var(--spacing-md)' }}>How it works</h1>
-        <p style={{ ...bodyText, marginBottom: 'var(--spacing-5xl)' }}>Three steps, about a minute per list.</p>
+        <h1 style={{ ...displayHeading, marginBottom: 'var(--spacing-md)' }}>{copy.title}</h1>
+        <p style={{ ...bodyText, marginBottom: 'var(--spacing-5xl)' }}>{copy.subtitle}</p>
 
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3xl)' }}>
           {/* Connector line between the step icons */}
@@ -260,7 +265,7 @@ function IntroStep({ onContinue, onBack }) {
 
           {points.map(({ icon: pointIcon, title, body }, i) => (
             <Motion.div
-              key={title}
+              key={i}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.08, duration: 0.3 }}
@@ -296,20 +301,20 @@ function IntroStep({ onContinue, onBack }) {
 
       <div style={footerStyle}>
         <PrimaryButton onClick={onContinue} icon={<ArrowRight size={18} color="var(--colors-fg-white)" />}>
-          Personalise my lists
+          {copy.cta}
         </PrimaryButton>
       </div>
     </>
   )
 }
 
-function DoneStep({ profile, onFinish, onEdit }) {
+function DoneStep({ copy, profile, onFinish, onEdit }) {
   const name = profile.name.trim()
   const rows = [
-    ['Using it for',  profile.goals.map(id => labelFor(GOALS, id)).join(', ')],
-    ['Shopping for',  labelFor(HOUSEHOLD_SIZES, profile.household)],
-    ['Product pick',  labelFor(PRODUCT_PREFS, profile.productPref)],
-    ['Diet',          profile.diet.map(id => labelFor(DIETS, id)).join(', ') || 'No restrictions'],
+    [copy.rowGoals,     profile.goals.map(id => labelFor(GOALS, id)).join(', ')],
+    [copy.rowHousehold, labelFor(HOUSEHOLD_SIZES, profile.household)],
+    [copy.rowProduct,   labelFor(PRODUCT_PREFS, profile.productPref)],
+    [copy.rowDiet,      profile.diet.map(id => labelFor(DIETS, id)).join(', ') || copy.noDiet],
   ].filter(([, value]) => value)
 
   return (
@@ -322,8 +327,8 @@ function DoneStep({ profile, onFinish, onEdit }) {
           style={{
             width: '80px', height: '80px',
             borderRadius: 'var(--radius-3xl)',
-            background: 'linear-gradient(135deg, rgba(127,86,217,0.15), rgba(103,65,198,0.15))',
-            border: '1px solid rgba(127,86,217,0.25)',
+            background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-600) 15%, transparent), color-mix(in srgb, var(--color-brand-700) 15%, transparent))',
+            border: '1px solid color-mix(in srgb, var(--color-brand-600) 25%, transparent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 'var(--spacing-3xl)',
           }}
@@ -332,10 +337,10 @@ function DoneStep({ profile, onFinish, onEdit }) {
         </Motion.div>
 
         <h1 style={{ ...displayHeading, fontSize: 'var(--font-size-display-xs)', lineHeight: 'var(--line-height-display-xs)', textAlign: 'center' }}>
-          You're all set{name ? `, ${name}` : ''}!
+          {fill(copy.title, { name })}
         </h1>
         <p style={{ ...bodyText, textAlign: 'center', marginBottom: 'var(--spacing-4xl)' }}>
-          Suggestions will now match how you shop.
+          {fill(copy.subtitle, { name })}
         </p>
 
         {rows.length > 0 && (
@@ -363,9 +368,9 @@ function DoneStep({ profile, onFinish, onEdit }) {
 
       <div style={footerStyle}>
         <PrimaryButton pulse onClick={onFinish} icon={<ArrowRight size={18} color="var(--colors-fg-white)" />}>
-          Create my first list
+          {copy.cta}
         </PrimaryButton>
-        <GhostButton onClick={onEdit}>Change answers</GhostButton>
+        <GhostButton onClick={onEdit}>{copy.edit}</GhostButton>
       </div>
     </>
   )
@@ -384,7 +389,7 @@ function HeroPreview() {
       {/* Glow */}
       <div style={{
         position: 'absolute', inset: '20px 40px',
-        background: 'radial-gradient(closest-side, rgba(127,86,217,0.35), transparent)',
+        background: 'radial-gradient(closest-side, color-mix(in srgb, var(--color-brand-600) 35%, transparent), transparent)',
         filter: 'blur(20px)',
       }} />
 
@@ -427,7 +432,7 @@ function HeroPreview() {
               padding: '2px 8px',
               borderRadius: 'var(--radius-sm)',
               border: `1px solid ${i === 0 ? 'var(--colors-border-brand)' : 'var(--colors-border-primary)'}`,
-              background: i === 0 ? 'rgba(127,86,217,0.15)' : 'var(--colors-bg-tertiary)',
+              background: i === 0 ? 'color-mix(in srgb, var(--color-brand-600) 15%, transparent)' : 'var(--colors-bg-tertiary)',
               color: i === 0 ? 'var(--colors-fg-primary)' : 'var(--colors-fg-tertiary)',
             }}>{s}</span>
           ))}
@@ -437,15 +442,15 @@ function HeroPreview() {
   )
 }
 
-function StepHeader({ current, total, onBack, onSkip }) {
+function StepHeader({ current, total, copy, onBack, onSkip }) {
   return (
     <div style={{ marginBottom: 'var(--spacing-4xl)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-xl)' }}>
         <IconButton onClick={onBack} label="Back"><ArrowLeft size={18} color="var(--colors-fg-tertiary)" /></IconButton>
         <span style={{ fontSize: 'var(--font-size-text-xs)', fontWeight: 'var(--font-weight-medium)', color: 'var(--colors-fg-quinary)' }}>
-          Step {current + 1} of {total}
+          {fill(copy.stepLabel, { current: String(current + 1), total: String(total) })}
         </span>
-        <GhostButton onClick={onSkip} compact>Skip</GhostButton>
+        <GhostButton onClick={onSkip} compact>{copy.skip}</GhostButton>
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
@@ -460,7 +465,7 @@ function StepHeader({ current, total, onBack, onSkip }) {
               height: '100%',
               width: i <= current ? '100%' : '0%',
               background: 'linear-gradient(90deg, var(--color-brand-700), var(--color-brand-500))',
-              boxShadow: i === current ? '0 0 8px rgba(127,86,217,0.5)' : 'none',
+              boxShadow: i === current ? '0 0 8px color-mix(in srgb, var(--color-brand-600) 50%, transparent)' : 'none',
               transition: 'width 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
           </div>
@@ -485,12 +490,13 @@ function QuestionLayout({ title, subtitle, children, footer }) {
   )
 }
 
-function NameInput({ value, onChange, onSubmit }) {
+function NameInput({ value, placeholder, autoFocus, onChange, onSubmit }) {
   const ref = useRef(null)
   useEffect(() => {
+    if (!autoFocus) return
     const t = setTimeout(() => ref.current?.focus(), 300)
     return () => clearTimeout(t)
-  }, [])
+  }, [autoFocus])
 
   return (
     <div className="uui-input-wrapper" style={{ padding: 'var(--spacing-lg) var(--spacing-xl)' }}>
@@ -503,7 +509,7 @@ function NameInput({ value, onChange, onSubmit }) {
         autoComplete="given-name"
         onChange={e => onChange(e.target.value)}
         onKeyDown={e => e.key === 'Enter' && onSubmit()}
-        placeholder="Your first name"
+        placeholder={placeholder}
       />
     </div>
   )
@@ -620,7 +626,7 @@ function FieldLabel({ children, optional }) {
       marginBottom: 'var(--spacing-lg)',
     }}>
       {children}
-      {optional && <span style={{ color: 'var(--colors-fg-quinary)', fontWeight: 'var(--font-weight-regular)' }}> · optional</span>}
+      {optional && <span style={{ color: 'var(--colors-fg-quinary)', fontWeight: 'var(--font-weight-regular)' }}> · {optional}</span>}
     </p>
   )
 }
@@ -786,7 +792,7 @@ function optionBase(selected, hovered) {
     fontSize: 'var(--font-size-text-sm)',
     fontWeight: 'var(--font-weight-medium)',
     color: selected ? 'var(--colors-fg-primary)' : 'var(--colors-fg-secondary)',
-    background: selected ? 'rgba(127,86,217,0.10)' : 'var(--colors-bg-secondary)',
+    background: selected ? 'color-mix(in srgb, var(--color-brand-600) 10%, transparent)' : 'var(--colors-bg-secondary)',
     border: `1px solid ${selected ? 'var(--colors-border-brand)' : hovered ? 'var(--colors-border-primary)' : 'var(--colors-border-secondary)'}`,
     borderRadius: 'var(--radius-xl)',
     boxShadow: selected ? 'var(--shadow-brand)' : 'none',
@@ -798,7 +804,7 @@ function iconTile(selected) {
   return {
     width: '36px', height: '36px', flexShrink: 0,
     borderRadius: 'var(--radius-md)',
-    background: selected ? 'rgba(127,86,217,0.18)' : 'var(--colors-bg-tertiary)',
+    background: selected ? 'color-mix(in srgb, var(--color-brand-600) 18%, transparent)' : 'var(--colors-bg-tertiary)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     transition: 'background 0.15s ease',
   }

@@ -43,7 +43,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-svh flex flex-col bg-[#0a0a0f]">
+      <div className="min-h-svh flex flex-col" style={{ background: 'var(--colors-bg-app)' }}>
         {screen === 'onboarding' && (
           <OnboardingScreen initialProfile={profile} onComplete={handleOnboardingComplete} />
         )}
