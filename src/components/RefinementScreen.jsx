@@ -3,6 +3,7 @@ import {
   CheckCircle, Stars01, ArrowNarrowRight, CheckDone01,
   Send01, RefreshCw01, ZapCircle, ArrowRight
 } from 'untitledui-js/react'
+import { personalizeSuggestions, quantitySuggestions } from '../profile'
 
 /* ── Product-specific suggestion map ── */
 const PRODUCT_MAP = [
@@ -74,27 +75,26 @@ const PRODUCT_MAP = [
 ]
 
 /* ── AI prompt resolver ── */
-function getAIPrompt(itemText) {
+function getAIPrompt(itemText, profile) {
   const text = itemText.toLowerCase().trim()
 
   // Try product-specific match first
   for (const entry of PRODUCT_MAP) {
     if (entry.match.test(text)) {
-      return { question: entry.q, suggestions: entry.s }
+      return { question: entry.q, suggestions: personalizeSuggestions(text, entry.s, profile) }
     }
   }
 
   // Fallback: ask for quantity/clarification generically
   return {
     question: 'Any details to add?',
-    suggestions: ['Small pack', 'Large pack', 'Organic', 'Store brand'],
+    suggestions: personalizeSuggestions(text, ['Small pack', 'Large pack', 'Organic', 'Store brand'], profile),
   }
 }
 
 const TOTAL_STEPS = 2
-const quantityPrompt = { question: 'How many?', suggestions: ['1', '2', '3', '4'] }
 
-export default function RefinementScreen({ items, onBack }) {
+export default function RefinementScreen({ items, profile, onBack }) {
   const [currentIndex, setCurrentIndex]   = useState(0)
   const [currentStep, setCurrentStep]     = useState(0)
   const [answers, setAnswers]             = useState({})
@@ -108,7 +108,8 @@ export default function RefinementScreen({ items, onBack }) {
   const stepsCompleted = currentIndex * TOTAL_STEPS + currentStep
   const progress     = done ? 100 : Math.round((stepsCompleted / totalSteps) * 100)
   const currentItem  = items[currentIndex]
-  const detailPrompt = currentItem ? getAIPrompt(currentItem.text) : null
+  const detailPrompt = currentItem ? getAIPrompt(currentItem.text, profile) : null
+  const quantityPrompt = { question: 'How many?', suggestions: quantitySuggestions(profile) }
   const activePrompt = currentStep === 0 ? detailPrompt : quantityPrompt
 
   /* Open drawer after mount / step change */
