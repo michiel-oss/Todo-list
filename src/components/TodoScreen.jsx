@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Plus, Send01, Trash01, CheckCircle, List } from 'untitledui-js/react'
+import { Plus, Send01, Trash01, CheckCircle, List, Settings01 } from 'untitledui-js/react'
 
-export default function TodoScreen({ onSend }) {
+export default function TodoScreen({ profile, onSend, onEditProfile }) {
+  const name = profile?.name?.trim()
   const [items, setItems] = useState([])
   const [input, setInput] = useState('')
   const inputRef = useRef(null)
@@ -41,8 +42,9 @@ export default function TodoScreen({ onSend }) {
 
       {/* ── Header ── */}
       <div style={{ marginBottom: 'var(--spacing-5xl)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-xl)' }}>
         {/* Badge */}
-        <div className="uui-badge uui-badge-brand" style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <div className="uui-badge uui-badge-brand">
           <span style={{
             width: '6px', height: '6px',
             borderRadius: 'var(--radius-full)',
@@ -51,6 +53,28 @@ export default function TodoScreen({ onSend }) {
             flexShrink: 0,
           }} />
           AI-powered
+        </div>
+
+        {onEditProfile && (
+          <button
+            onClick={onEditProfile}
+            aria-label="Edit preferences"
+            title="Edit preferences"
+            style={{
+              width: '32px', height: '32px',
+              borderRadius: 'var(--radius-md)',
+              background: 'transparent',
+              border: '1px solid var(--colors-border-secondary)',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'border-color 0.15s ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--colors-border-primary)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--colors-border-secondary)'}
+          >
+            <Settings01 size={16} color="var(--colors-fg-quaternary)" />
+          </button>
+        )}
         </div>
 
         {/* Display heading */}
@@ -63,7 +87,7 @@ export default function TodoScreen({ onSend }) {
           color: 'var(--colors-fg-primary)',
           marginBottom: 'var(--spacing-lg)',
         }}>
-          What's on your{' '}
+          {name ? `Hi ${name}, what's` : "What's"} on your{' '}
           <span style={{
             background: 'linear-gradient(135deg, var(--color-brand-400), var(--color-brand-600))',
             WebkitBackgroundClip: 'text',

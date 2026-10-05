@@ -1,6 +1,8 @@
 import { useState, Component } from 'react'
 import TodoScreen from './components/TodoScreen'
 import RefinementScreen from './components/RefinementScreen'
+import OnboardingScreen from './components/OnboardingScreen'
+import { loadProfile, saveProfile } from './profile'
 import './index.css'
 
 class ErrorBoundary extends Component {
@@ -20,8 +22,15 @@ class ErrorBoundary extends Component {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState('todo')
+  const [profile, setProfile] = useState(loadProfile)
+  const [screen, setScreen] = useState(() => (profile ? 'todo' : 'onboarding'))
   const [items, setItems] = useState([])
+
+  function handleOnboardingComplete(newProfile) {
+    saveProfile(newProfile)
+    setProfile(newProfile)
+    setScreen('todo')
+  }
 
   function handleSend(todoItems) {
     setItems(todoItems)
@@ -35,8 +44,13 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className="min-h-svh flex flex-col bg-[#0a0a0f]">
-        {screen === 'todo' && <TodoScreen onSend={handleSend} />}
-        {screen === 'refine' && <RefinementScreen items={items} onBack={handleBack} />}
+        {screen === 'onboarding' && (
+          <OnboardingScreen initialProfile={profile} onComplete={handleOnboardingComplete} />
+        )}
+        {screen === 'todo' && (
+          <TodoScreen profile={profile} onSend={handleSend} onEditProfile={() => setScreen('onboarding')} />
+        )}
+        {screen === 'refine' && <RefinementScreen items={items} profile={profile} onBack={handleBack} />}
       </div>
     </ErrorBoundary>
   )
